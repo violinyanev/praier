@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 jobs:
@@ -134,3 +135,25 @@ jobs:
         # Check for security settings
         grep -q "NoNewPrivileges=true" scripts/praier.service
         grep -q "PrivateTmp=true" scripts/praier.service
+
+  # Status check job that summarizes all test results
+  # This job will be used as a required status check in branch protection rules
+  test-status:
+    runs-on: ubuntu-latest
+    needs: [test, security, integration]
+    if: always()
+    steps:
+    - name: Check test results
+      run: |
+        if [ "${{ needs.test.result }}" = "success" ] && \
+           [ "${{ needs.security.result }}" = "success" ] && \
+           [ "${{ needs.integration.result }}" = "success" ]; then
+          echo "✅ All tests passed!"
+          exit 0
+        else
+          echo "❌ Some tests failed:"
+          echo "  Test suite: ${{ needs.test.result }}"
+          echo "  Security checks: ${{ needs.security.result }}"
+          echo "  Integration tests: ${{ needs.integration.result }}"
+          exit 1
+        fi
