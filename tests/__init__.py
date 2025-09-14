@@ -8,10 +8,6 @@ import os
 # Add the parent directory to the path so we can import praier
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import and run test modules
-import test_config
-import test_github_client
-
 if __name__ == '__main__':
     print("Running Praier tests...")
     print("=" * 40)
