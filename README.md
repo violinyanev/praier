@@ -169,6 +169,37 @@ For GitHub Apps, ensure similar permissions are granted.
 - Monitor logs for any unauthorized access attempts
 - Regularly rotate your GitHub tokens
 
+## GitHub Actions Workflow
+
+This repository includes a GitHub Actions workflow that automatically runs the Praier monitor every 30 minutes.
+
+### Workflow Configuration
+
+The workflow (`.github/workflows/praier-monitor.yml`) is configured to:
+
+- **Schedule**: Runs every 30 minutes using cron schedule `*/30 * * * *`
+- **Manual trigger**: Can be triggered manually via GitHub Actions UI
+- **Environment**: Uses Ubuntu latest with Python 3.11
+- **Timeout**: Limited to 5 minutes (300 seconds) per run
+
+### Required Configuration
+
+To use the workflow, configure these repository settings:
+
+1. **Repository Variables** (Settings → Secrets and variables → Actions → Variables):
+   - `PRAIER_REPOSITORIES`: Comma-separated list of repositories to monitor (e.g., `owner/repo1,owner/repo2`)
+
+2. **Repository Secrets** (automatically available):
+   - `GITHUB_TOKEN`: Automatically provided by GitHub Actions with appropriate permissions
+
+### Workflow Environment Variables
+
+The workflow sets these environment variables:
+- `PRAIER_POLL_INTERVAL`: 1800 seconds (30 minutes)
+- `PRAIER_AUTO_APPROVE`: true (auto-approve workflow runs)
+- `PRAIER_AUTO_FIX`: true (request Copilot fixes for failures)
+- `PRAIER_LOG_LEVEL`: INFO
+
 ## Development
 
 ```bash

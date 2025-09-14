@@ -1,0 +1,37 @@
+name: Praier PR Monitor
+
+on:
+  schedule:
+    # Run every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        
+    - name: Run Praier Monitor
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PRAIER_REPOSITORIES: ${{ vars.PRAIER_REPOSITORIES || 'violinyanev/praier' }}
+        PRAIER_POLL_INTERVAL: 1800  # 30 minutes in seconds
+        PRAIER_AUTO_APPROVE: true
+        PRAIER_AUTO_FIX: true
+        PRAIER_LOG_LEVEL: INFO
+      run: |
+        # Run for a single monitoring cycle since this is triggered every 30 minutes
+        timeout 300 praier monitor || true
