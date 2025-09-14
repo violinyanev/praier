@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  praier:
+    build: .
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - PRAIER_REPOSITORIES=${PRAIER_REPOSITORIES}
+      - PRAIER_POLL_INTERVAL=${PRAIER_POLL_INTERVAL:-60}
+      - PRAIER_AUTO_APPROVE=${PRAIER_AUTO_APPROVE:-true}
+      - PRAIER_AUTO_FIX=${PRAIER_AUTO_FIX:-true}
+      - PRAIER_LOG_LEVEL=${PRAIER_LOG_LEVEL:-INFO}
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro  # Optional: mount config file
+    # Uncomment to use config file instead of environment variables
+    # command: ["praier", "--config", "config.yaml", "monitor"]
