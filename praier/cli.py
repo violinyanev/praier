@@ -110,7 +110,7 @@ def status(ctx):
     click.echo(f"GitHub Servers: {len(config.github_servers)}")
     for i, server in enumerate(config.github_servers):
         token_status = "✓" if server.token else "✗"
-        click.echo(f"  {i+1}. {server.name} ({server.url}) - Token: {token_status}")
+        click.echo(f"  {i + 1}. {server.name} ({server.url}) - Token: {token_status}")
 
     # Monitoring config
     click.echo("\nMonitoring Configuration:")

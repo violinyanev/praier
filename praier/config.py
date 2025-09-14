@@ -103,10 +103,12 @@ class PraierConfig:
                 if os.getenv("PRAIER_REPOSITORIES")
                 else []
             ),
-            auto_approve_actions=os.getenv("PRAIER_AUTO_APPROVE", "true").lower()
-            == "true",
-            auto_fix_with_copilot=os.getenv("PRAIER_AUTO_FIX", "true").lower()
-            == "true",
+            auto_approve_actions=(
+                os.getenv("PRAIER_AUTO_APPROVE", "true").lower() == "true"
+            ),
+            auto_fix_with_copilot=(
+                os.getenv("PRAIER_AUTO_FIX", "true").lower() == "true"
+            ),
         )
 
         return cls(
