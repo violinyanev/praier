@@ -37,7 +37,7 @@ class MonitoringConfig:
 
     poll_interval: int = 60  # seconds
     max_concurrent_requests: int = 10
-    repositories: List[str] = None  # e.g., ["owner/repo1", "owner/repo2"]
+    repositories: Optional[List[str]] = None  # e.g., ["owner/repo1", "owner/repo2"]
     auto_approve_actions: bool = True
     auto_fix_with_copilot: bool = True
 
@@ -50,8 +50,8 @@ class MonitoringConfig:
 class PraierConfig:
     """Main configuration for Praier."""
 
-    github_servers: List[GitHubConfig] = None
-    monitoring: MonitoringConfig = None
+    github_servers: Optional[List[GitHubConfig]] = None
+    monitoring: Optional[MonitoringConfig] = None
     log_level: str = "INFO"
 
     def __post_init__(self):
