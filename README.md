@@ -209,6 +209,9 @@ pip install -e ".[dev]"
 # Run tests
 pytest
 
+# Run tests with coverage
+pytest --cov=praier --cov-report=html
+
 # Format code
 black praier/
 isort praier/
@@ -219,6 +222,49 @@ mypy praier/
 # Lint
 flake8 praier/
 ```
+
+### Running Tests
+
+Praier includes a comprehensive test suite with 60+ tests covering:
+
+- **CLI functionality**: All command-line commands and options
+- **Monitor logic**: Async PR monitoring, workflow approval, Copilot integration
+- **Script validation**: Installation scripts, systemd service configuration
+- **Integration tests**: End-to-end functionality validation
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific test modules
+pytest tests/test_cli.py -v
+pytest tests/test_monitor.py -v
+pytest tests/test_scripts.py -v
+
+# Run tests with coverage report
+pytest tests/ --cov=praier --cov-report=term-missing
+
+# Run tests for specific functionality
+pytest tests/ -k "test_monitor_command"
+```
+
+### Continuous Integration
+
+The project uses GitHub Actions for continuous integration:
+
+- **Test Workflow** (`.github/workflows/tests.yml`): Runs on all PRs and pushes
+  - Tests across Python 3.8-3.12
+  - Code quality checks (flake8, mypy, black, isort)
+  - Security scanning (bandit, safety)
+  - Coverage reporting
+  - Integration testing
+
+- **Monitor Workflow** (`.github/workflows/praier-monitor.yml`): Production monitoring
+  - Runs tests before deploying
+  - Only proceeds if tests pass
+  - Executes actual monitoring if tests succeed
+
+**Pull Request Requirements**: All PRs must pass the complete test suite before merging. The test workflow is configured as a required status check.
 
 ## Contributing
 

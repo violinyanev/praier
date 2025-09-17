@@ -2,7 +2,6 @@
 GitHub client for GraphQL and REST API interactions.
 """
 
-import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -57,7 +56,7 @@ class WorkflowRun:
     conclusion: Optional[str]
     url: str
     head_sha: str
-    pull_requests: List[int] = None
+    pull_requests: Optional[List[int]] = None
 
     def __post_init__(self):
         if self.pull_requests is None:
@@ -92,7 +91,7 @@ class GitHubClient:
         return response
 
     def graphql_query(
-        self, query: str, variables: Dict[str, Any] = None
+        self, query: str, variables: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Execute a GraphQL query."""
         if variables is None:
@@ -116,9 +115,14 @@ class GitHubClient:
         owner, repo = repository.split("/")
 
         query = """
-        query($owner: String!, $repo: String!, $states: [PullRequestState!], $first: Int!) {
+        query($owner: String!, $repo: String!,
+              $states: [PullRequestState!], $first: Int!) {
           repository(owner: $owner, name: $repo) {
-            pullRequests(states: $states, first: $first, orderBy: {field: UPDATED_AT, direction: DESC}) {
+            pullRequests(
+              states: $states,
+              first: $first,
+              orderBy: {field: UPDATED_AT, direction: DESC}
+            ) {
               nodes {
                 id
                 number
@@ -177,13 +181,13 @@ class GitHubClient:
         return prs
 
     def get_workflow_runs(
-        self, repository: str, head_sha: str = None
+        self, repository: str, head_sha: Optional[str] = None
     ) -> List[WorkflowRun]:
         """Get workflow runs for a repository."""
         owner, repo = repository.split("/")
         endpoint = f"/repos/{owner}/{repo}/actions/runs"
 
-        params = {"per_page": 100}
+        params: Dict[str, Any] = {"per_page": 100}
         if head_sha:
             params["head_sha"] = head_sha
 
@@ -213,7 +217,7 @@ class GitHubClient:
         endpoint = f"/repos/{owner}/{repo}/actions/runs/{run_id}/approve"
 
         try:
-            response = self._make_request("POST", endpoint)
+            self._make_request("POST", endpoint)
             logger.info(f"Approved workflow run {run_id} in {repository}")
             return True
         except requests.exceptions.HTTPError as e:
@@ -254,7 +258,7 @@ class GitHubClient:
         payload = {"body": body}
 
         try:
-            response = self._make_request("POST", endpoint, json=payload)
+            self._make_request("POST", endpoint, json=payload)
             logger.info(f"Created comment on PR #{issue_number} in {repository}")
             return True
         except requests.exceptions.HTTPError as e:

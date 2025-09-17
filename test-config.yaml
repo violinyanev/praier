@@ -1,0 +1,23 @@
+# Praier Configuration File
+# Copy this file and customize it for your needs
+
+github_servers:
+  - name: "public"
+    url: "https://api.github.com"
+    token: "${GITHUB_TOKEN}"
+
+  # Example for GitHub Enterprise Server
+  # - name: "enterprise"
+  #   url: "https://github.company.com/api/v3"
+  #   token: "${GITHUB_ENTERPRISE_TOKEN}"
+
+monitoring:
+  poll_interval: 60  # seconds
+  max_concurrent_requests: 10
+  repositories:
+    - "owner/repo1"
+    - "owner/repo2"
+  auto_approve_actions: true
+  auto_fix_with_copilot: true
+
+log_level: "INFO"

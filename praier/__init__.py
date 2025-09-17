@@ -1,5 +1,5 @@
 """
-Praier - A tool to automate pull request workflows with GitHub Actions and Copilot integration.
+Praier - A tool to automate pull request workflows with GitHub Actions.
 """
 
 __version__ = "0.1.0"

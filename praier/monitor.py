@@ -4,12 +4,11 @@ Core monitoring logic for pull requests and workflow runs.
 
 import asyncio
 import logging
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set
 
-from .config import GitHubConfig, PraierConfig
+from .config import PraierConfig
 from .github_client import CheckRun, GitHubClient, PullRequest, WorkflowRun
 
 logger = logging.getLogger(__name__)
@@ -38,18 +37,20 @@ class PRMonitor:
         )  # server_name -> pr_number -> state
 
         # Initialize GitHub clients
-        for github_config in config.github_servers:
-            if not github_config.token:
-                logger.warning(
-                    f"No token provided for GitHub server '{github_config.name}', skipping"
-                )
-                continue
+        if config.github_servers:
+            for github_config in config.github_servers:
+                if not github_config.token:
+                    logger.warning(
+                        f"No token provided for GitHub server "
+                        f"'{github_config.name}', skipping"
+                    )
+                    continue
 
-            client = GitHubClient(github_config.url, github_config.token)
-            self.clients[github_config.name] = {
-                "client": client,
-                "config": github_config,
-            }
+                client = GitHubClient(github_config.url, github_config.token)
+                self.clients[github_config.name] = {
+                    "client": client,
+                    "config": github_config,
+                }
             self.pr_states[github_config.name] = {}
 
     async def start_monitoring(self):
@@ -63,13 +64,23 @@ class PRMonitor:
         while True:
             try:
                 await self.monitor_cycle()
-                await asyncio.sleep(self.config.monitoring.poll_interval)
+                poll_interval = (
+                    self.config.monitoring.poll_interval
+                    if self.config.monitoring
+                    else 60
+                )
+                await asyncio.sleep(poll_interval)
             except KeyboardInterrupt:
                 logger.info("Monitoring stopped by user")
                 break
             except Exception as e:
                 logger.error(f"Error in monitoring cycle: {e}", exc_info=True)
-                await asyncio.sleep(min(self.config.monitoring.poll_interval, 30))
+                poll_interval = (
+                    self.config.monitoring.poll_interval
+                    if self.config.monitoring
+                    else 60
+                )
+                await asyncio.sleep(min(poll_interval, 30))
 
     async def monitor_cycle(self):
         """Perform one monitoring cycle across all configured servers."""
@@ -88,9 +99,10 @@ class PRMonitor:
     async def monitor_server(self, server_name: str, server_info: Dict):
         """Monitor all repositories on a single GitHub server."""
         client = server_info["client"]
-        github_config = server_info["config"]
 
-        repositories = self.config.monitoring.repositories
+        repositories = (
+            self.config.monitoring.repositories if self.config.monitoring else None
+        )
         if not repositories:
             logger.warning(
                 f"No repositories configured for monitoring on {server_name}"
@@ -166,21 +178,21 @@ class PRMonitor:
         pr_state: PRState,
     ):
         """Process workflow runs for auto-approval."""
-        if not self.config.monitoring.auto_approve_actions:
+        if not (self.config.monitoring and self.config.monitoring.auto_approve_actions):
             return
 
         pr_key = f"{repository}#{pr.number}"
 
         for run in workflow_runs:
             # Skip if this run doesn't belong to this PR
-            if pr.number not in run.pull_requests:
+            if not run.pull_requests or pr.number not in run.pull_requests:
                 continue
 
             # Skip if already approved
             if run.id in pr_state.approved_runs:
                 continue
 
-            # Check if run needs approval (status is "queued" often indicates pending approval)
+            # Check if run needs approval (status indicates pending approval)
             if run.status in ["queued", "waiting"]:
                 logger.info(f"Attempting to approve workflow run {run.id} for {pr_key}")
 
@@ -201,7 +213,9 @@ class PRMonitor:
         pr_state: PRState,
     ):
         """Process check runs and request Copilot fixes if needed."""
-        if not self.config.monitoring.auto_fix_with_copilot:
+        if not (
+            self.config.monitoring and self.config.monitoring.auto_fix_with_copilot
+        ):
             return
 
         pr_key = f"{repository}#{pr.number}"
@@ -228,15 +242,15 @@ class PRMonitor:
         # Update tracked check runs
         pr_state.last_check_runs = {check.id: check for check in check_runs}
 
-    def get_monitoring_stats(self) -> Dict:
+    def get_monitoring_stats(self) -> Dict[str, Any]:
         """Get statistics about current monitoring state."""
-        stats = {
+        stats: Dict[str, Any] = {
             "servers": len(self.clients),
             "total_prs": 0,
             "active_prs_by_server": {},
             "repositories": (
                 self.config.monitoring.repositories.copy()
-                if self.config.monitoring.repositories
+                if self.config.monitoring and self.config.monitoring.repositories
                 else []
             ),
         }
