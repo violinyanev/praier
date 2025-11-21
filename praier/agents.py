@@ -26,7 +26,7 @@ class AgentReport:
     findings: List[str] = field(default_factory=list)
     recommendations: List[str] = field(default_factory=list)
     actions_taken: List[str] = field(default_factory=list)
-    priority: str = "low"  # low, high, critical
+    priority: str = "low"  # low, normal, high, critical
 
 
 class Agent(ABC):
