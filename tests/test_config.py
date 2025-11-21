@@ -73,6 +73,13 @@ monitoring:
   auto_approve_actions: false
   auto_fix_with_copilot: true
 
+agents:
+  enabled: true
+  developer_enabled: true
+  tester_enabled: false
+  documentation_enabled: true
+  project_manager_enabled: true
+
 log_level: "DEBUG"
 """
 
@@ -89,10 +96,39 @@ log_level: "DEBUG"
         assert config.monitoring.repositories == ["owner/repo1"]
         assert config.monitoring.auto_approve_actions == False
         assert config.monitoring.auto_fix_with_copilot == True
+        assert config.agents.enabled == True
+        assert config.agents.developer_enabled == True
+        assert config.agents.tester_enabled == False
+        assert config.agents.documentation_enabled == True
+        assert config.agents.project_manager_enabled == True
         assert config.log_level == "DEBUG"
 
     # Clean up
     os.unlink(f.name)
+
+
+def test_agent_config_from_env():
+    """Test AgentConfig loading from environment variables."""
+    os.environ["PRAIER_AGENTS_ENABLED"] = "true"
+    os.environ["PRAIER_AGENT_DEVELOPER"] = "false"
+    os.environ["PRAIER_AGENT_TESTER"] = "true"
+    os.environ["PRAIER_AGENT_DOCUMENTATION"] = "true"
+    os.environ["PRAIER_AGENT_PROJECT_MANAGER"] = "false"
+
+    config = PraierConfig.load_from_env()
+
+    assert config.agents.enabled == True
+    assert config.agents.developer_enabled == False
+    assert config.agents.tester_enabled == True
+    assert config.agents.documentation_enabled == True
+    assert config.agents.project_manager_enabled == False
+
+    # Clean up
+    del os.environ["PRAIER_AGENTS_ENABLED"]
+    del os.environ["PRAIER_AGENT_DEVELOPER"]
+    del os.environ["PRAIER_AGENT_TESTER"]
+    del os.environ["PRAIER_AGENT_DOCUMENTATION"]
+    del os.environ["PRAIER_AGENT_PROJECT_MANAGER"]
 
 
 if __name__ == "__main__":
@@ -100,4 +136,5 @@ if __name__ == "__main__":
     test_github_config_defaults()
     test_praier_config_from_env()
     test_praier_config_from_yaml()
+    test_agent_config_from_env()
     print("All configuration tests passed!")
