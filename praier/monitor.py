@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Dict, List, Set, Tuple
 
+from .agents import AgentTeam, create_default_team
 from .config import GitHubConfig, PraierConfig
 from .github_client import CheckRun, GitHubClient, PullRequest, WorkflowRun
 
@@ -36,6 +37,36 @@ class PRMonitor:
         self.pr_states: Dict[str, Dict[int, PRState]] = (
             {}
         )  # server_name -> pr_number -> state
+
+        # Initialize agent team
+        self.agent_team = None
+        if config.agents.enabled:
+            self.agent_team = create_default_team()
+
+            # Configure individual agents based on config
+            if not config.agents.developer_enabled:
+                agent = self.agent_team.get_agent("Developer")
+                if agent:
+                    agent.disable()
+
+            if not config.agents.tester_enabled:
+                agent = self.agent_team.get_agent("Tester")
+                if agent:
+                    agent.disable()
+
+            if not config.agents.documentation_enabled:
+                agent = self.agent_team.get_agent("Documentation")
+                if agent:
+                    agent.disable()
+
+            if not config.agents.project_manager_enabled:
+                agent = self.agent_team.get_agent("ProjectManager")
+                if agent:
+                    agent.disable()
+
+            logger.info(
+                f"Agent team initialized with {len(self.agent_team.list_agents())} agents"
+            )
 
         # Initialize GitHub clients
         for github_config in config.github_servers:
@@ -142,6 +173,30 @@ class PRMonitor:
         try:
             workflow_runs = client.get_workflow_runs(repository, head_sha=pr.head_sha)
             check_runs = client.get_check_runs(repository, pr.head_sha)
+
+            # Run agent analysis if enabled
+            if self.agent_team:
+                try:
+                    reports = await self.agent_team.analyze_pr(
+                        pr, repository, check_runs, workflow_runs
+                    )
+
+                    if reports:
+                        summary = self.agent_team.get_team_summary(reports)
+                        logger.info(
+                            f"Agent team analysis for {pr_key}: "
+                            f"{summary['total_findings']} findings, "
+                            f"priority: {summary['overall_priority']}"
+                        )
+
+                        # Log individual agent summaries
+                        for agent_name, agent_summary in summary[
+                            "agent_summaries"
+                        ].items():
+                            logger.debug(f"  {agent_name}: {agent_summary}")
+
+                except Exception as e:
+                    logger.error(f"Agent team analysis failed for {pr_key}: {e}")
 
             # Process workflow runs
             await self.process_workflow_runs(

@@ -3,7 +3,8 @@ Tests for the GitHub client module.
 """
 
 from datetime import datetime
-from praier.github_client import PullRequest, CheckRun, WorkflowRun
+
+from praier.github_client import CheckRun, PullRequest, WorkflowRun
 
 
 def test_pull_request_creation():
@@ -21,9 +22,9 @@ def test_pull_request_creation():
         repository="owner/repo",
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        draft=False
+        draft=False,
     )
-    
+
     assert pr.number == 123
     assert pr.title == "Test PR"
     assert pr.state == "open"
@@ -38,9 +39,9 @@ def test_check_run_creation():
         name="CI Tests",
         status="completed",
         conclusion="failure",
-        url="https://github.com/owner/repo/runs/12345"
+        url="https://github.com/owner/repo/runs/12345",
     )
-    
+
     assert check.id == "12345"
     assert check.name == "CI Tests"
     assert check.status == "completed"
@@ -56,9 +57,9 @@ def test_workflow_run_creation():
         conclusion="success",
         url="https://github.com/owner/repo/actions/runs/67890",
         head_sha="def456",
-        pull_requests=[123, 124]
+        pull_requests=[123, 124],
     )
-    
+
     assert run.id == "67890"
     assert run.name == "CI"
     assert run.pull_requests == [123, 124]
@@ -72,13 +73,13 @@ def test_workflow_run_defaults():
         status="in_progress",
         conclusion=None,
         url="https://github.com/owner/repo/actions/runs/67890",
-        head_sha="def456"
+        head_sha="def456",
     )
-    
+
     assert run.pull_requests == []
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_pull_request_creation()
     test_check_run_creation()
     test_workflow_run_creation()

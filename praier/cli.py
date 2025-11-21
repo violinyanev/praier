@@ -119,6 +119,17 @@ def status(ctx):
     click.echo(f"  Auto-approve actions: {config.monitoring.auto_approve_actions}")
     click.echo(f"  Auto-fix with Copilot: {config.monitoring.auto_fix_with_copilot}")
 
+    # Agent configuration
+    click.echo(f"\nAgent Team Configuration:")
+    click.echo(f"  Agents enabled: {config.agents.enabled}")
+    if config.agents.enabled:
+        click.echo(f"    Developer agent: {config.agents.developer_enabled}")
+        click.echo(f"    Tester agent: {config.agents.tester_enabled}")
+        click.echo(f"    Documentation agent: {config.agents.documentation_enabled}")
+        click.echo(
+            f"    Project Manager agent: {config.agents.project_manager_enabled}"
+        )
+
     # Repositories
     if config.monitoring.repositories:
         click.echo(f"\nRepositories ({len(config.monitoring.repositories)}):")
@@ -155,6 +166,13 @@ monitoring:
     - "owner/repo2"
   auto_approve_actions: true
   auto_fix_with_copilot: true
+
+agents:
+  enabled: true
+  developer_enabled: true
+  tester_enabled: true
+  documentation_enabled: true
+  project_manager_enabled: true
 
 log_level: "INFO"
 """
@@ -210,6 +228,60 @@ def test_connection(ctx, repository: str, server: str):
     except Exception as e:
         click.echo(f"✗ Connection failed: {e}", err=True)
         sys.exit(1)
+
+
+@cli.command()
+@click.pass_context
+def agents(ctx):
+    """Show agent team information and capabilities."""
+    config = ctx.obj["config"]
+
+    click.echo("Praier Agent Team")
+    click.echo("=" * 50)
+
+    if not config.agents.enabled:
+        click.echo("⚠️  Agent team is currently disabled")
+        click.echo("\nTo enable agents, set PRAIER_AGENTS_ENABLED=true")
+        return
+
+    click.echo("✓ Agent team is enabled\n")
+
+    # Developer Agent
+    status = "✓ Enabled" if config.agents.developer_enabled else "✗ Disabled"
+    click.echo(f"🔧 Developer Agent: {status}")
+    click.echo("   Focus: Code quality, development best practices")
+    click.echo("   Analyzes: Linting, formatting, code style checks")
+    click.echo("   Actions: Identifies code quality issues\n")
+
+    # Tester Agent
+    status = "✓ Enabled" if config.agents.tester_enabled else "✗ Disabled"
+    click.echo(f"🧪 Tester Agent: {status}")
+    click.echo("   Focus: Testing and quality assurance")
+    click.echo("   Analyzes: Test failures, test coverage")
+    click.echo("   Actions: Identifies test issues, suggests improvements\n")
+
+    # Documentation Agent
+    status = "✓ Enabled" if config.agents.documentation_enabled else "✗ Disabled"
+    click.echo(f"📝 Documentation Agent: {status}")
+    click.echo("   Focus: Documentation quality and completeness")
+    click.echo("   Analyzes: Documentation builds, README updates")
+    click.echo("   Actions: Ensures docs are up to date\n")
+
+    # Project Manager Agent
+    status = "✓ Enabled" if config.agents.project_manager_enabled else "✗ Disabled"
+    click.echo(f"📊 Project Manager Agent: {status}")
+    click.echo("   Focus: Overall coordination and prioritization")
+    click.echo("   Analyzes: All checks, workflow status")
+    click.echo("   Actions: Provides overall PR status, prioritizes issues\n")
+
+    click.echo("Configuration:")
+    click.echo("  Enable/disable via environment variables:")
+    click.echo("    PRAIER_AGENTS_ENABLED=true")
+    click.echo("    PRAIER_AGENT_DEVELOPER=true")
+    click.echo("    PRAIER_AGENT_TESTER=true")
+    click.echo("    PRAIER_AGENT_DOCUMENTATION=true")
+    click.echo("    PRAIER_AGENT_PROJECT_MANAGER=true")
+    click.echo("\n  Or in config.yaml under 'agents:' section")
 
 
 def main():

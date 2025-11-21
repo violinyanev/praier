@@ -20,4 +20,11 @@ monitoring:
   auto_approve_actions: true
   auto_fix_with_copilot: true
 
+agents:
+  enabled: true
+  developer_enabled: true
+  tester_enabled: true
+  documentation_enabled: true
+  project_manager_enabled: true
+
 log_level: "INFO"

@@ -32,6 +32,17 @@ class GitHubConfig:
 
 
 @dataclass
+class AgentConfig:
+    """Configuration for agent team behavior."""
+
+    enabled: bool = True
+    developer_enabled: bool = True
+    tester_enabled: bool = True
+    documentation_enabled: bool = True
+    project_manager_enabled: bool = True
+
+
+@dataclass
 class MonitoringConfig:
     """Configuration for PR monitoring behavior."""
 
@@ -52,6 +63,7 @@ class PraierConfig:
 
     github_servers: List[GitHubConfig] = None
     monitoring: MonitoringConfig = None
+    agents: AgentConfig = None
     log_level: str = "INFO"
 
     def __post_init__(self):
@@ -59,6 +71,8 @@ class PraierConfig:
             self.github_servers = [GitHubConfig.from_env()]
         if self.monitoring is None:
             self.monitoring = MonitoringConfig()
+        if self.agents is None:
+            self.agents = AgentConfig()
 
     @classmethod
     def load_from_file(cls, config_path: str) -> "PraierConfig":
@@ -73,9 +87,13 @@ class PraierConfig:
         monitoring_data = data.get("monitoring", {})
         monitoring = MonitoringConfig(**monitoring_data)
 
+        agents_data = data.get("agents", {})
+        agents = AgentConfig(**agents_data)
+
         return cls(
             github_servers=github_servers,
             monitoring=monitoring,
+            agents=agents,
             log_level=data.get("log_level", "INFO"),
         )
 
@@ -109,8 +127,25 @@ class PraierConfig:
             == "true",
         )
 
+        # Load agent config
+        agents = AgentConfig(
+            enabled=os.getenv("PRAIER_AGENTS_ENABLED", "true").lower() == "true",
+            developer_enabled=os.getenv("PRAIER_AGENT_DEVELOPER", "true").lower()
+            == "true",
+            tester_enabled=os.getenv("PRAIER_AGENT_TESTER", "true").lower() == "true",
+            documentation_enabled=os.getenv(
+                "PRAIER_AGENT_DOCUMENTATION", "true"
+            ).lower()
+            == "true",
+            project_manager_enabled=os.getenv(
+                "PRAIER_AGENT_PROJECT_MANAGER", "true"
+            ).lower()
+            == "true",
+        )
+
         return cls(
             github_servers=github_servers,
             monitoring=monitoring,
+            agents=agents,
             log_level=os.getenv("PRAIER_LOG_LEVEL", "INFO"),
         )

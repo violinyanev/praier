@@ -1,6 +1,6 @@
 # Praier
 
-A tool to automate pull request workflows with GitHub Actions and Copilot integration.
+A tool to automate pull request workflows with GitHub Actions, Copilot integration, and AI-powered agent team analysis.
 
 ## Overview
 
@@ -8,6 +8,7 @@ Praier is a Python tool that monitors GitHub pull requests across one or more Gi
 
 - **Approves GitHub Actions workflows** that are waiting for approval
 - **Requests GitHub Copilot fixes** for failing checks in pull requests
+- **Analyzes PRs with AI agent team** providing specialized insights from multiple perspectives
 - **Monitors PR status changes** using GraphQL queries with efficient change detection
 - **Runs as a background service** with configurable polling intervals
 
@@ -16,6 +17,11 @@ Praier is a Python tool that monitors GitHub pull requests across one or more Gi
 - 🔄 **Multi-server support**: Connect to public GitHub and GitHub Enterprise Server instances
 - 🚀 **Auto-approve Actions**: Automatically approve workflow runs that require manual approval
 - 🤖 **Copilot integration**: Request GitHub Copilot to fix failing checks in PRs
+- 👥 **Agent Team**: Multi-agent system with specialized agents for comprehensive PR analysis
+  - 🔧 **Developer Agent**: Analyzes code quality, linting, and formatting issues
+  - 🧪 **Tester Agent**: Reviews test failures and coverage
+  - 📝 **Documentation Agent**: Checks documentation completeness and quality
+  - 📊 **Project Manager Agent**: Provides overall coordination and prioritization
 - 📊 **GraphQL monitoring**: Efficient PR monitoring using GitHub's GraphQL API
 - ⚙️ **Configurable**: Flexible configuration via environment variables or YAML files
 - 🔍 **Change detection**: Only takes action when PR status actually changes
@@ -91,6 +97,13 @@ monitoring:
   auto_approve_actions: true
   auto_fix_with_copilot: true
 
+agents:
+  enabled: true
+  developer_enabled: true
+  tester_enabled: true
+  documentation_enabled: true
+  project_manager_enabled: true
+
 log_level: "INFO"
 ```
 
@@ -105,6 +118,9 @@ praier monitor
 # Check configuration status
 praier status
 
+# View agent team information
+praier agents
+
 # Test connection to a repository
 praier test-connection owner/repo
 
@@ -117,6 +133,28 @@ praier --config config.yaml monitor
 # Set log level
 praier --log-level DEBUG monitor
 ```
+
+### Agent Team
+
+The agent team provides specialized analysis of pull requests from multiple perspectives:
+
+```bash
+# View agent team capabilities
+praier agents
+
+# Configure agents via environment variables
+export PRAIER_AGENTS_ENABLED=true
+export PRAIER_AGENT_DEVELOPER=true
+export PRAIER_AGENT_TESTER=true
+export PRAIER_AGENT_DOCUMENTATION=true
+export PRAIER_AGENT_PROJECT_MANAGER=true
+```
+
+Each agent provides specialized insights:
+- **Developer Agent** 🔧: Identifies code quality issues, linting failures, and development best practices
+- **Tester Agent** 🧪: Analyzes test failures, suggests test improvements, prioritizes critical test issues
+- **Documentation Agent** 📝: Ensures documentation is complete, up-to-date, and builds successfully
+- **Project Manager Agent** 📊: Provides overall PR status, coordinates findings, and prioritizes issues
 
 ### Multiple GitHub Servers
 
