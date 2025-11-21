@@ -94,13 +94,13 @@ log_level: "DEBUG"
         assert config.github_servers[0].token == "test-token"
         assert config.monitoring.poll_interval == 45
         assert config.monitoring.repositories == ["owner/repo1"]
-        assert config.monitoring.auto_approve_actions == False
-        assert config.monitoring.auto_fix_with_copilot == True
-        assert config.agents.enabled == True
-        assert config.agents.developer_enabled == True
-        assert config.agents.tester_enabled == False
-        assert config.agents.documentation_enabled == True
-        assert config.agents.project_manager_enabled == True
+        assert config.monitoring.auto_approve_actions is False
+        assert config.monitoring.auto_fix_with_copilot is True
+        assert config.agents.enabled is True
+        assert config.agents.developer_enabled is True
+        assert config.agents.tester_enabled is False
+        assert config.agents.documentation_enabled is True
+        assert config.agents.project_manager_enabled is True
         assert config.log_level == "DEBUG"
 
     # Clean up
@@ -117,11 +117,11 @@ def test_agent_config_from_env():
 
     config = PraierConfig.load_from_env()
 
-    assert config.agents.enabled == True
-    assert config.agents.developer_enabled == False
-    assert config.agents.tester_enabled == True
-    assert config.agents.documentation_enabled == True
-    assert config.agents.project_manager_enabled == False
+    assert config.agents.enabled is True
+    assert config.agents.developer_enabled is False
+    assert config.agents.tester_enabled is True
+    assert config.agents.documentation_enabled is True
+    assert config.agents.project_manager_enabled is False
 
     # Clean up
     del os.environ["PRAIER_AGENTS_ENABLED"]
