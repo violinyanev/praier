@@ -1,0 +1,159 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run linting with flake8
+      run: |
+        flake8 praier/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 praier/ --count --max-line-length=88 --statistics
+
+    - name: Run type checking with mypy
+      run: |
+        mypy praier/
+
+    - name: Check code formatting with black
+      run: |
+        black --check praier/
+
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only praier/
+
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --cov=praier --cov-report=xml --cov-report=term-missing
+
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+        pip install bandit safety
+
+    - name: Run security checks with bandit
+      run: |
+        bandit -r praier/ -f json -o bandit-report.json || true
+        bandit -r praier/
+
+    - name: Check dependencies for known vulnerabilities
+      run: |
+        safety check --json --output safety-report.json || true
+        safety check
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+
+    - name: Test CLI commands
+      run: |
+        # Test that praier command is available
+        praier --help
+        
+        # Test status command
+        praier status
+        
+        # Test generate-config command
+        praier generate-config --output test-config.yaml
+        test -f test-config.yaml
+        
+        # Test config file loading
+        praier --config test-config.yaml status
+
+    - name: Test demo script
+      run: |
+        python demo.py
+
+    - name: Test script syntax
+      run: |
+        bash -n scripts/install.sh
+        
+    - name: Validate systemd service file
+      run: |
+        # Check that service file has required sections
+        grep -q "\[Unit\]" scripts/praier.service
+        grep -q "\[Service\]" scripts/praier.service
+        grep -q "\[Install\]" scripts/praier.service
+        
+        # Check for security settings
+        grep -q "NoNewPrivileges=true" scripts/praier.service
+        grep -q "PrivateTmp=true" scripts/praier.service
+
+  # Status check job that summarizes all test results
+  # This job will be used as a required status check in branch protection rules
+  test-status:
+    runs-on: ubuntu-latest
+    needs: [test, security, integration]
+    if: always()
+    steps:
+    - name: Check test results
+      run: |
+        if [ "${{ needs.test.result }}" = "success" ] && \
+           [ "${{ needs.security.result }}" = "success" ] && \
+           [ "${{ needs.integration.result }}" = "success" ]; then
+          echo "✅ All tests passed!"
+          exit 0
+        else
+          echo "❌ Some tests failed:"
+          echo "  Test suite: ${{ needs.test.result }}"
+          echo "  Security checks: ${{ needs.security.result }}"
+          echo "  Integration tests: ${{ needs.integration.result }}"
+          exit 1
+        fi

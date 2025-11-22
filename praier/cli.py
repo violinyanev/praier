@@ -67,14 +67,16 @@ def monitor(ctx):
     # Validate configuration
     if not any(server.token for server in config.github_servers):
         click.echo(
-            "Error: No GitHub tokens configured. Set GITHUB_TOKEN environment variable or provide a config file.",
+            "Error: No GitHub tokens configured. Set GITHUB_TOKEN environment "
+            "variable or provide a config file.",
             err=True,
         )
         sys.exit(1)
 
     if not config.monitoring.repositories:
         click.echo(
-            "Warning: No repositories configured for monitoring. Set PRAIER_REPOSITORIES environment variable.",
+            "Warning: No repositories configured for monitoring. Set "
+            "PRAIER_REPOSITORIES environment variable.",
             err=True,
         )
         click.echo("Example: PRAIER_REPOSITORIES=owner/repo1,owner/repo2")
@@ -108,10 +110,10 @@ def status(ctx):
     click.echo(f"GitHub Servers: {len(config.github_servers)}")
     for i, server in enumerate(config.github_servers):
         token_status = "✓" if server.token else "✗"
-        click.echo(f"  {i+1}. {server.name} ({server.url}) - Token: {token_status}")
+        click.echo(f"  {i + 1}. {server.name} ({server.url}) - Token: {token_status}")
 
     # Monitoring config
-    click.echo(f"\nMonitoring Configuration:")
+    click.echo("\nMonitoring Configuration:")
     click.echo(f"  Poll interval: {config.monitoring.poll_interval}s")
     click.echo(
         f"  Max concurrent requests: {config.monitoring.max_concurrent_requests}"
@@ -125,7 +127,7 @@ def status(ctx):
         for repo in config.monitoring.repositories:
             click.echo(f"  - {repo}")
     else:
-        click.echo(f"\nRepositories: None configured")
+        click.echo("\nRepositories: None configured")
 
     click.echo(f"\nLog level: {config.log_level}")
 
@@ -141,7 +143,7 @@ github_servers:
   - name: "public"
     url: "https://api.github.com"
     token: "${GITHUB_TOKEN}"
-  
+
   # Example for GitHub Enterprise Server
   # - name: "enterprise"
   #   url: "https://github.company.com/api/v3"
